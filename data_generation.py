@@ -6,23 +6,44 @@
 '''
 
 import cv2
+from os import getcwd, path
+import arducam_mipicamera as arducam
 
-camera = cv2.VideoCapture(0)
-ret, img = camera.read()
+
+camera = arducam.mipi_camera()
+camera.init_camera()
+camera.set_mode(0)
+camera.software_auto_white_balance(enable=True)
+camera.software_auto_exposure(enable=True)
+fmt = camera.get_resolution()
 
 
-path = "/home/abhishek/stuff/object_detection/explore/aruco_data/"
+def align_down(size, align):
+    return (size & ~((align) - 1))
+
+
+def align_up(size, align):
+    return align_down(size + align - 1, align)
+
+
+def read_img():
+    frame = camera.capture(encoding='i420')
+    height = int(align_up(fmt[1], 16))
+    width = int(align_up(fmt[0], 32))
+    image = frame.as_array.reshape(int(height * 1.5), width)
+    return cv2.cvtColor(image, cv2.COLOR_YUV2BGR_I420)
+
+
+path = path.join(getcwd(), "aruco_data")
 count = 0
 while True:
-    name = path + str(count)+".jpg"
-    ret, img = camera.read()
-    cv2.imshow("img", img)
+    name = path + str(count) + ".jpg"
+    ret, img = read_img()
 
-
-    if cv2.waitKey(20) & 0xFF == ord('c'):
+    if input("") != "q":
         cv2.imwrite(name, img)
-        cv2.imshow("img", img)
+        print("Wrote", name)
         count += 1
-        if cv2.waitKey(0) & 0xFF == ord('q'):
-
-            break;
+    else:
+        camera.close_camera()
+        break
