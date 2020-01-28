@@ -31,7 +31,7 @@ def read_img():
     height = int(align_up(fmt[1], 16))
     width = int(align_up(fmt[0], 32))
     image = frame.as_array.reshape(int(height * 1.5), width)
-    return cv2.cvtColor(image, cv2.COLOR_YUV2BGR_I420)
+    return cv2.flip(cv2.cvtColor(image, cv2.COLOR_YUV2BGR_I420), -1)
 
 
 path = path.join(getcwd(), "aruco_data")
